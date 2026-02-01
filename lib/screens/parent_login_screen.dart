@@ -1,9 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../utils/dialogs.dart';
 import 'parent_dashboard.dart';
-import 'parent_signup_screen.dart';
-import 'dart:convert';
 
 class ParentLoginScreen extends StatefulWidget {
   const ParentLoginScreen({super.key});
@@ -13,51 +11,63 @@ class ParentLoginScreen extends StatefulWidget {
 }
 
 class _ParentLoginScreenState extends State<ParentLoginScreen> {
-  final email = TextEditingController();
-  final password = TextEditingController();
+  final emailCtrl = TextEditingController();
+  final passwordCtrl = TextEditingController();
+  final AuthService authService = AuthService();
 
-  void login() async {
-  final res = await AuthService.parentLogin(
-    email: email.text,
-    password: password.text,
-  );
+  Future<void> login() async {
+    try {
+      final res = await authService.loginParent(
+        emailCtrl.text.trim(),
+        passwordCtrl.text.trim(),
+      );
 
-  final data = jsonDecode(res.body);
+      final Map<String, dynamic> data = jsonDecode(res.body);
 
-  if (res.statusCode != 200 ||
-      !data.containsKey("access_token") ||
-      data["access_token"].toString().isEmpty) {
-    showInfoDialog(context, "Invalid email or password");
-    return;
+      if (!mounted) return;
+
+      if (res.statusCode == 200 &&
+          data.containsKey("access_token") &&
+          data["access_token"] != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ParentDashboard(),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Invalid credentials")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
   }
 
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const ParentDashboard(),
-    ),
-  );
-}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Parent Login")),
       body: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(controller: email, decoration: const InputDecoration(labelText: "Email")),
-            TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: "Password")),
-            const SizedBox(height: 16),
-            ElevatedButton(onPressed: login, child: const Text("Login")),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ParentSignupScreen()),
-                );
-              },
-              child: const Text("Not registered? Sign up"),
+            TextField(
+              controller: emailCtrl,
+              decoration: const InputDecoration(labelText: "Email"),
+            ),
+            TextField(
+              controller: passwordCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: "Password"),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: login,
+              child: const Text("Login"),
             ),
           ],
         ),

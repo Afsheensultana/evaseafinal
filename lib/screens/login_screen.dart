@@ -13,14 +13,54 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   bool isPasswordVisible = false;
   bool isLoading = false;
 
-  // ✅ ROLE STATE (DECLARED ONCE – CORRECT PLACE)
   String selectedRole = "student";
+
+  Future<void> _login() async {
+    setState(() => isLoading = true);
+
+    try {
+      final response = await AuthService.login(
+        role: selectedRole,
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200 &&
+          data.containsKey("access_token") &&
+          data["access_token"] != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => selectedRole == "student"
+                ? const StudentDashboard()
+                : const FacultyDashboard(),
+          ),
+        );
+      } else {
+        _showMessage("Invalid email or password");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _showMessage("Something went wrong");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   void _forgotPasswordPopup() {
     showDialog(
@@ -32,52 +72,10 @@ class _LoginScreenState extends State<LoginScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text("OK"),
-          ),
+          )
         ],
       ),
     );
-  }
-
-  Future<void> _login() async {
-    if (emailController.text.isEmpty ||
-        passwordController.text.isEmpty) {
-      _showMessage("Please fill all fields");
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    final response = await AuthService.login(
-      role: selectedRole,
-      email: emailController.text,
-      password: passwordController.text,
-    );
-
-    setState(() => isLoading = false);
-
-    final data = jsonDecode(response.body);
-
-    if (response.statusCode != 200 ||
-        !data.containsKey("access_token") ||
-        data["access_token"].toString().isEmpty) {
-      _showMessage("Invalid email or password");
-      return;
-    }
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            selectedRole == "student"
-                ? const StudentDashboard()
-                : const FacultyDashboard(),
-      ),
-    );
-  }
-
-  void _showMessage(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -89,15 +87,15 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             const SizedBox(height: 60),
 
-            /// ✅ LOGO (ASSET KEPT)
+            /// LOGO (UNCHANGED)
             Image.asset(
-  'assets/images/logo.png',
-  height: 240,
-),
+              'assets/images/logo.png',
+              height: 240,
+            ),
 
             const SizedBox(height: 20),
 
-            /// ✅ SIMPLE ROLE DROPDOWN (NOT BOXED)
+            /// ROLE DROPDOWN (UNCHANGED)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -126,7 +124,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 20),
 
-            /// EMAIL
             TextField(
               controller: emailController,
               decoration: const InputDecoration(
@@ -137,7 +134,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 16),
 
-            /// PASSWORD WITH SHOW / HIDE
             TextField(
               controller: passwordController,
               obscureText: !isPasswordVisible,
@@ -161,7 +157,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 8),
 
-            /// FORGOT (LEFT) + PARENT (RIGHT)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -174,8 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const ParentSignupScreen(),
+                        builder: (_) => const ParentSignupScreen(),
                       ),
                     );
                   },
@@ -186,7 +180,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 20),
 
-            /// LOGIN BUTTON
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../config/api_endpoints.dart';
 
 class AuthService {
-  /// Student / Faculty Login
+  // Student / Faculty login (already used in login_screen.dart)
   static Future<http.Response> login({
     required String role,
     required String email,
@@ -23,11 +23,9 @@ class AuthService {
     );
   }
 
-  /// Parent Login
-  static Future<http.Response> parentLogin({
-    required String email,
-    required String password,
-  }) async {
+  // Parent login
+  Future<http.Response> loginParent(
+      String email, String password) async {
     return await http.post(
       Uri.parse(ApiEndpoints.parentLogin),
       headers: const {"Content-Type": "application/json"},
@@ -38,8 +36,8 @@ class AuthService {
     );
   }
 
-  /// Parent Signup
-  static Future<http.Response> parentSignup(
+  // Parent signup
+  Future<http.Response> parentSignup(
       Map<String, dynamic> data) async {
     return await http.post(
       Uri.parse(ApiEndpoints.parentSignup),

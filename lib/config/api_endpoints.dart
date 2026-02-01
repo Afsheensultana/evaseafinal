@@ -1,5 +1,5 @@
 class ApiEndpoints {
-  static const String baseUrl = "http://192.168.1.42:5500";
+  static const String baseUrl = "https://c9n9q8bz5h.execute-api.ap-south-1.amazonaws.com/dev";
 
   // Student
   static const String studentLogin =

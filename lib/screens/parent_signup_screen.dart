@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'parent_login_screen.dart';
@@ -16,28 +17,36 @@ class _ParentSignupScreenState extends State<ParentSignupScreen> {
   final studentController = TextEditingController();
   final collegeController = TextEditingController();
 
-  bool isLoading = false;
+  final AuthService authService = AuthService();
 
   Future<void> register() async {
-    setState(() => isLoading = true);
+    try {
+      final res = await authService.parentSignup({
+        "email": emailController.text.trim(),
+        "phone": phoneController.text.trim(),
+        "name": nameController.text.trim(),
+        "student_name": studentController.text.trim(),
+        "college": collegeController.text.trim(),
+      });
 
-    final response = await AuthService.parentSignup({
-      "email": emailController.text,
-      "phone": phoneController.text,
-      "name": nameController.text,
-      "student_name": studentController.text,
-      "college_name": collegeController.text,
-    });
+      if (!mounted) return;
 
-    setState(() => isLoading = false);
-
-    if (response.statusCode == 200) {
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ParentLoginScreen(),
+          ),
+        );
+      } else {
+        final data = jsonDecode(res.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['error'] ?? "Signup failed")),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registration successful")),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registration failed")),
+        SnackBar(content: Text(e.toString())),
       );
     }
   }
@@ -45,62 +54,20 @@ class _ParentSignupScreenState extends State<ParentSignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Parent Registration")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+      appBar: AppBar(title: const Text("Parent Signup")),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
-            ),
-            TextField(
-              controller: phoneController,
-              decoration: const InputDecoration(labelText: "Phone"),
-            ),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "Parent Name"),
-            ),
-            TextField(
-              controller: studentController,
-              decoration: const InputDecoration(labelText: "Student Name"),
-            ),
-            TextField(
-              controller: collegeController,
-              decoration: const InputDecoration(labelText: "College Name"),
-            ),
-
+            TextField(controller: emailController, decoration: const InputDecoration(labelText: "Email")),
+            TextField(controller: phoneController, decoration: const InputDecoration(labelText: "Phone")),
+            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Name")),
+            TextField(controller: studentController, decoration: const InputDecoration(labelText: "Student Name")),
+            TextField(controller: collegeController, decoration: const InputDecoration(labelText: "College")),
             const SizedBox(height: 20),
-
-            /// REGISTER BUTTON
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: isLoading ? null : register,
-                child: const Text("Register"),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            /// 👇 THIS WAS MISSING — NOW FIXED
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("Already registered? "),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ParentLoginScreen(),
-                      ),
-                    );
-                  },
-                  child: const Text("Login"),
-                ),
-              ],
+            ElevatedButton(
+              onPressed: register,
+              child: const Text("Register"),
             ),
           ],
         ),

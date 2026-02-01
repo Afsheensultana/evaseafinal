@@ -10,10 +10,9 @@ class EvalSeaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'EvalSea',
-      home: const LoginScreen(),
+      home: LoginScreen(),
     );
   }
 }

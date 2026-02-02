@@ -21,41 +21,53 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String selectedRole = "student";
 
-  Future<void> _login() async {
-    setState(() => isLoading = true);
+Future<void> _login() async {
+  setState(() => isLoading = true);
 
-    try {
-      final response = await AuthService.login(
-        role: selectedRole,
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
+  try {
+    final response = await AuthService.login(
+      role: selectedRole,
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    print("STATUS: ${response.statusCode}");
+    print("RAW BODY: ${response.body}");
+
+    final Map<String, dynamic> outerJson = jsonDecode(response.body);
+
+    // 🔥 VERY IMPORTANT: decode body AGAIN
+    final Map<String, dynamic> innerBody =
+        jsonDecode(outerJson['body']);
+
+    final String? accessToken = innerBody['access_token'];
+    final String? idToken = innerBody['id_token'];
+
+    if (accessToken != null && idToken != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => selectedRole == "student"
+              ? const StudentDashboard()
+              : const FacultyDashboard(),
+        ),
       );
-
-      final Map<String, dynamic> data = jsonDecode(response.body);
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200 &&
-          data.containsKey("access_token") &&
-          data["access_token"] != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => selectedRole == "student"
-                ? const StudentDashboard()
-                : const FacultyDashboard(),
-          ),
-        );
-      } else {
-        _showMessage("Invalid email or password");
-      }
-    } catch (e) {
-      if (!mounted) return;
-      _showMessage("Something went wrong");
-    } finally {
-      if (mounted) setState(() => isLoading = false);
+    } else {
+      _showMessage("Invalid credentials");
     }
+  } catch (e) {
+    print("LOGIN ERROR: $e");
+    if (!mounted) return;
+    _showMessage("Login failed");
+  } finally {
+    if (mounted) setState(() => isLoading = false);
   }
+}
+
+
+
 
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context)

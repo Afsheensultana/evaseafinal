@@ -3,18 +3,14 @@ import 'package:http/http.dart' as http;
 import '../config/api_endpoints.dart';
 
 class AuthService {
-  // Student / Faculty login (already used in login_screen.dart)
+  // ---------- LOGIN ----------
   static Future<http.Response> login({
-    required String role,
+    String? role, // kept for UI compatibility
     required String email,
     required String password,
   }) async {
-    final String url = role == "student"
-        ? ApiEndpoints.studentLogin
-        : ApiEndpoints.facultyLogin;
-
     return await http.post(
-      Uri.parse(url),
+      Uri.parse(ApiEndpoints.studentLogin),
       headers: const {"Content-Type": "application/json"},
       body: jsonEncode({
         "email": email.trim(),
@@ -23,26 +19,27 @@ class AuthService {
     );
   }
 
-  // Parent login
-  Future<http.Response> loginParent(
-      String email, String password) async {
-    return await http.post(
-      Uri.parse(ApiEndpoints.parentLogin),
-      headers: const {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "email": email.trim(),
-        "password": password.trim(),
-      }),
-    );
-  }
-
-  // Parent signup
-  Future<http.Response> parentSignup(
-      Map<String, dynamic> data) async {
+  // ---------- PARENT SIGNUP ----------
+  Future<http.Response> parentSignup(Map<String, dynamic> data) async {
     return await http.post(
       Uri.parse(ApiEndpoints.parentSignup),
       headers: const {"Content-Type": "application/json"},
       body: jsonEncode(data),
+    );
+  }
+
+  // ---------- ✅ PARENT CONFIRM EMAIL ----------
+  Future<http.Response> confirmParentEmail({
+    required String email,
+    required String otp,
+  }) async {
+    return await http.post(
+      Uri.parse(ApiEndpoints.parentConfirmEmail),
+      headers: const {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": email,
+        "otp": otp,
+      }),
     );
   }
 }

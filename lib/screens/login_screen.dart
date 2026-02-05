@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'student_dashboard.dart';
 import 'faculty_dashboard.dart';
+import 'parent_dashboard.dart';
 import 'parent_signup_screen.dart';
+import '../utils/app_session.dart'; // ✅ ADDED
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,56 +21,99 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isPasswordVisible = false;
   bool isLoading = false;
 
-  String selectedRole = "student";
+  // ---------------- JWT DECODE ----------------
+  Map<String, dynamic> _decodeJwt(String token) {
+    final parts = token.split('.');
+    if (parts.length != 3) {
+      throw Exception('Invalid JWT');
+    }
 
-Future<void> _login() async {
-  setState(() => isLoading = true);
+    final payload = parts[1];
+    final normalized = base64Url.normalize(payload);
+    final decoded = utf8.decode(base64Url.decode(normalized));
+    return jsonDecode(decoded);
+  }
 
-  try {
-    final response = await AuthService.login(
-      role: selectedRole,
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
+  // ---------------- LOGIN ----------------
+  Future<void> _login() async {
+    setState(() => isLoading = true);
 
-    if (!mounted) return;
+    try {
+      final response = await AuthService.login(
+        role: null,
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
 
-    print("STATUS: ${response.statusCode}");
-    print("RAW BODY: ${response.body}");
+      if (!mounted) return;
 
-    final Map<String, dynamic> outerJson = jsonDecode(response.body);
+      if (response.statusCode != 200) {
+        _showMessage("Invalid credentials");
+        return;
+      }
 
-    // 🔥 VERY IMPORTANT: decode body AGAIN
-    final Map<String, dynamic> innerBody =
-        jsonDecode(outerJson['body']);
+      // -------- Parse outer JSON --------
+      final Map<String, dynamic> outerJson = jsonDecode(response.body);
 
-    final String? accessToken = innerBody['access_token'];
-    final String? idToken = innerBody['id_token'];
+      if (!outerJson.containsKey('body')) {
+        _showMessage("Invalid credentials");
+        return;
+      }
 
-    if (accessToken != null && idToken != null) {
+      // -------- Parse inner body --------
+      final Map<String, dynamic> innerBody =
+          jsonDecode(outerJson['body']);
+
+      final String? accessToken = innerBody['access_token'];
+
+      if (accessToken == null || accessToken.isEmpty) {
+        _showMessage("Invalid credentials");
+        return;
+      }
+
+      // ✅ FIX: STORE TOKEN FOR FUTURE APIS
+      AppSession.token = accessToken;
+
+      // -------- Decode JWT --------
+      final decodedToken = _decodeJwt(accessToken);
+      final String? role =
+          decodedToken['role'] ?? decodedToken['custom:role'];
+
+      if (role == null) {
+        _showMessage("Role not found");
+        return;
+      }
+
+      // -------- Navigate by role --------
+      Widget target;
+
+      switch (role) {
+        case 'student':
+          target = const StudentDashboard();
+          break;
+        case 'faculty':
+          target = const FacultyDashboard();
+          break;
+        case 'parent':
+          target = const ParentDashboard();
+          break;
+        default:
+          _showMessage("Unknown role");
+          return;
+      }
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => selectedRole == "student"
-              ? const StudentDashboard()
-              : const FacultyDashboard(),
-        ),
+        MaterialPageRoute(builder: (_) => target),
       );
-    } else {
-      _showMessage("Invalid credentials");
+    } catch (e) {
+      _showMessage("Login failed");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
-  } catch (e) {
-    print("LOGIN ERROR: $e");
-    if (!mounted) return;
-    _showMessage("Login failed");
-  } finally {
-    if (mounted) setState(() => isLoading = false);
   }
-}
 
-
-
-
+  // ---------------- UI HELPERS ----------------
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(msg)));
@@ -90,6 +135,7 @@ Future<void> _login() async {
     );
   }
 
+  // ---------------- UI ----------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,39 +145,9 @@ Future<void> _login() async {
           children: [
             const SizedBox(height: 60),
 
-            /// LOGO (UNCHANGED)
             Image.asset(
               'assets/images/logo.png',
               height: 240,
-            ),
-
-            const SizedBox(height: 20),
-
-            /// ROLE DROPDOWN (UNCHANGED)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("Login as: "),
-                const SizedBox(width: 10),
-                DropdownButton<String>(
-                  value: selectedRole,
-                  items: const [
-                    DropdownMenuItem(
-                      value: "student",
-                      child: Text("Student"),
-                    ),
-                    DropdownMenuItem(
-                      value: "faculty",
-                      child: Text("Faculty"),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedRole = value!;
-                    });
-                  },
-                ),
-              ],
             ),
 
             const SizedBox(height: 20),

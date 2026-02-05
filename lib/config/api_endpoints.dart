@@ -13,6 +13,48 @@ class ApiEndpoints {
   static const String parentLogin =
       "$baseUrl/user/login_parent/login_parent";
 
+   // Parent signup
   static const String parentSignup =
       "$baseUrl/user/signup_parent/signup_parent";
+
+  // ✅ Parent confirm email
+  static const String parentConfirmEmail =
+      "$baseUrl/user/confirm_email/confirm_email";
+       // ✅ FIX: Generate Assignment API
+  static const String generateAssignment =
+      "$baseUrl/user/generate/assngen";
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,60 +1,41 @@
 class ApiEndpoints {
-  static const String baseUrl = "https://c9n9q8bz5h.execute-api.ap-south-1.amazonaws.com/dev";
+  static const String baseUrl =
+      "https://c9n9q8bz5h.execute-api.ap-south-1.amazonaws.com/dev";
 
-  // Student
+  // ---------------- STUDENT ----------------
   static const String studentLogin =
-      "$baseUrl/user/login_student/login_student";
+      "$baseUrl/user/login/login";
 
-  // Faculty
+  // ---------------- FACULTY ----------------
   static const String facultyLogin =
-      "$baseUrl/user/login_faculty/login_faculty";
+      "$baseUrl/user/login/login";
 
-  // Parent
+  // ✅ CREATE CLASS
+  static const String createClass =
+      "$baseUrl/user/create_class/create_class";
+
+  // ✅ JOIN CLASS
+  static const String joinClass =
+      "$baseUrl/user/join_class/join_class";
+
+  // ✅ GET FACULTY CLASSES ✅
+  static const String getFacultyClasses =
+      "$baseUrl/user/get_class_faculty/get_class_faculty";
+  static const String getStudentClasses =
+      "$baseUrl/user/get_class_student/get_class_student";
+
+
+  // ---------------- PARENT ----------------
   static const String parentLogin =
-      "$baseUrl/user/login_parent/login_parent";
+      "$baseUrl/user/login/login";
 
-   // Parent signup
   static const String parentSignup =
       "$baseUrl/user/signup_parent/signup_parent";
 
-  // ✅ Parent confirm email
   static const String parentConfirmEmail =
       "$baseUrl/user/confirm_email/confirm_email";
-       // ✅ FIX: Generate Assignment API
+
+  // ---------------- ASSIGNMENT ----------------
   static const String generateAssignment =
       "$baseUrl/user/generate/assngen";
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

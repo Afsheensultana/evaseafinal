@@ -80,55 +80,122 @@ class _ParentConfirmEmailScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Confirm Email")),
+      backgroundColor: const Color(0xFFFAFAFB),
+      appBar: AppBar(
+        title: const Text("Confirm Email"),
+        backgroundColor: const Color(0xFFFAFAFB),
+        foregroundColor: const Color(0xFF1A1D2B),
+        elevation: 0,
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "OTP has been sent to:",
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.email,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
+          padding: const EdgeInsets.all(20),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFE8E8EC)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color.fromRGBO(30, 42, 74, 0.06),
+                  blurRadius: 30,
+                  offset: Offset(0, 10),
                 ),
-              ),
-
-              const SizedBox(height: 24),
-
-              TextField(
-                controller: otpController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: "Enter OTP",
-                  border: OutlineInputBorder(),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "OTP has been sent to:",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF5A6078),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 6),
+                Text(
+                  widget.email,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Color(0xFF1A1D2B),
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-              const SizedBox(height: 24),
+                TextField(
+                  controller: otpController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: "Enter OTP",
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding:
+                        const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE8E8EC),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFB8829E),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : confirmEmail,
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color(0xFFB8829E),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(12),
+                      ),
+                      elevation: 6,
+                      shadowColor:
+                          const Color.fromRGBO(
+                              184, 130, 158, 0.4),
+                    ),
+                    onPressed:
+                        isLoading ? null : confirmEmail,
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child:
+                                CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            "Confirm",
+                            style: TextStyle(
+                              fontWeight:
+                                  FontWeight.w600,
+                                  color: Colors.white,
+                              fontSize: 15,
+                            ),
                           ),
-                        )
-                      : const Text("Confirm"),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

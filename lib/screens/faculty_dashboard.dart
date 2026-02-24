@@ -80,6 +80,8 @@ class _FacultyDashboardState
         classes = classList
             .map<Map<String, String>>((item) {
           return {
+            "classId": 
+                item["class_id"].toString(),
             "className":
                 item["class_name"].toString(),
             "subject":
@@ -246,31 +248,34 @@ class _FacultyDashboardState
               const SizedBox(height: 12),
 
               Expanded(
-                child: isLoading
-                    ? const Center(
-                        child:
-                            CircularProgressIndicator(),
-                      )
-                    : ListView.builder(
-                        itemCount: classes.length,
-                        itemBuilder:
-                            (context, index) {
+              child: isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(),
+                    )
+                  : ListView.builder(
+                      itemCount: classes.length,
+                      itemBuilder: (context, index) {
 
-                          final classItem =
-                              classes[index];
+                        final classItem = classes[index];
 
-                          return _classCard(
-                            context,
-                            classItem["className"] ??
-                                "Unnamed Class",
-                            classItem["subject"] ??
-                                "No Subject",
-                            classItem["year"] ?? "",
-                            index,
-                          );
-                        },
-                      ),
-              ),
+                        final classId = classItem["classId"] ?? "";
+                        final className = classItem["className"] ?? "Unnamed Class";
+                        final subject = classItem["subject"] ?? "No Subject";
+                        final year = classItem["year"] ?? "";
+
+                        return _classCard(
+                          context,
+                          classId,   // ✅ pass classId
+                          className,
+                          subject,
+                          year,
+                          index,
+                        );
+                      },
+                    ),
+            ),
+
+
             ],
           ),
         ),
@@ -353,6 +358,7 @@ class _FacultyDashboardState
 
   Widget _classCard(
     BuildContext context,
+    String classId,
     String className,
     String subject,
     String year,
@@ -423,17 +429,17 @@ class _FacultyDashboardState
           ],
         ),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  FacultyClassScreen(
-                className:
-                    className,
-              ),
-            ),
-          );
-        },
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => FacultyClassScreen(
+        className: className,
+        classId: classId,   // ✅ ADD THIS
+      ),
+    ),
+  );
+},
+
       ),
     );
   }

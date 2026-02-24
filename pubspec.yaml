@@ -11,6 +11,8 @@ dependencies:
   http: ^1.2.0
   shared_preferences: ^2.2.2
   jwt_decoder: ^2.0.1   # ✅ moved here
+  url_launcher: ^6.2.6
+  shimmer: ^3.0.0
 
 flutter:
   uses-material-design: true

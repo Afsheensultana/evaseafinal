@@ -4,10 +4,12 @@ import 'assignment_list_screen.dart';
 
 class FacultyClassScreen extends StatefulWidget {
   final String className;
+  final String classId;   // ✅ ADD THIS
 
   const FacultyClassScreen({
     super.key,
     required this.className,
+    required this.classId,   // ✅ ADD THIS
   });
 
   @override
@@ -59,20 +61,22 @@ class _FacultyClassScreenState
               /// ---------------- FOLDERS ----------------
 
               _folderTile(
-                icon: Icons.folder_open,
-                title: "Ongoing Assignments",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const AssignmentListScreen(
-                        title: "Ongoing Assignments",
-                        isOngoing: true,
-                      ),
+                      icon: Icons.folder_open,
+                      title: "Ongoing Assignments",
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => AssignmentListScreen(
+                              title: "Ongoing Assignments",
+                              isOngoing: true,
+                              classId: widget.classId,   // ✅ Now valid
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
+
 
               const SizedBox(height: 16),
 
@@ -83,10 +87,12 @@ class _FacultyClassScreenState
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const AssignmentListScreen(
+                      builder: (_) => AssignmentListScreen(
                         title: "Previous Assignments",
                         isOngoing: false,
+                        classId: widget.classId,   // ✅ PASS HERE ALSO
                       ),
+
                     ),
                   );
                 },

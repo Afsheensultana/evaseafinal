@@ -74,6 +74,8 @@ class _StudentDashboardState
           classes = classList
               .map<Map<String, dynamic>>((item) {
             return {
+              "class_id":
+                  item["class_id"] ?? "",
               "name":
                   item["class_name"] ?? "Unnamed",
               "code":
@@ -202,12 +204,11 @@ class _StudentDashboardState
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) =>
-                                          StudentClassDetailsScreen(
-                                        className:
-                                            cls["name"]
-                                                as String,
-                                      ),
+                                      builder: (_) => StudentClassDetailsScreen(
+                                      className: cls["name"]?.toString() ?? "",
+                                      classId: cls["class_id"]?.toString() ?? "",
+                                    ),
+
                                     ),
                                   );
                                 },

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'student_attendance_screen.dart';
 import 'student_assignments_screen.dart';
+import 'student_attendance_screen.dart';
 
 class StudentClassDetailsScreen extends StatelessWidget {
   final String className;
+  final String classId;   // ✅ REQUIRED
 
   const StudentClassDetailsScreen({
     super.key,
     required this.className,
+    required this.classId,   // ✅ FIXED
   });
 
   @override
@@ -27,6 +29,7 @@ class StudentClassDetailsScreen extends StatelessWidget {
         child: Column(
           children: [
 
+
             /// 📚 VIEW ASSIGNMENTS
             _actionCard(
               context,
@@ -38,6 +41,7 @@ class StudentClassDetailsScreen extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (_) => StudentAssignmentsScreen(
                       className: className,
+                      classId: classId,
                     ),
                   ),
                 );

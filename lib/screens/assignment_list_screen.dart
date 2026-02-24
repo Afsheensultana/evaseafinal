@@ -96,11 +96,11 @@ class _AssignmentListScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: const Color(0xFFF9FAFC), // softer background
       appBar: AppBar(
         title: Text(widget.title,
             style: const TextStyle(
-                fontWeight: FontWeight.bold)),
+                fontWeight: FontWeight.w600)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0,
@@ -133,7 +133,6 @@ class _AssignmentListScreenState
     );
   }
 
-  /// 🔥 PRODUCT LEVEL CARD
   Widget _assignmentTile(
       Map<String, dynamic> assignment,
       int index) {
@@ -155,53 +154,48 @@ class _AssignmentListScreenState
         return Opacity(
           opacity: value,
           child: Transform.translate(
-            offset: Offset(0, 30 * (1 - value)),
+            offset: Offset(0, 20 * (1 - value)),
             child: child,
           ),
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
+        margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius:
-              BorderRadius.circular(18),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+              BorderRadius.circular(16),
+          border: Border.all(
+              color: const Color(0xFFEDEFF5)), // light border
         ),
         child: ListTile(
           contentPadding:
               const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14),
+                  horizontal: 18,
+                  vertical: 12),
           leading: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: widget.isOngoing
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.blue.withOpacity(0.1),
+                  ? const Color(0xFFE6F4EA)
+                  : const Color(0xFFE8F0FE),
               borderRadius:
-                  BorderRadius.circular(12),
+                  BorderRadius.circular(10),
             ),
             child: Icon(
               widget.isOngoing
                   ? Icons.schedule_rounded
                   : Icons.history_rounded,
               color: widget.isOngoing
-                  ? Colors.green
-                  : Colors.blue,
+                  ? const Color(0xFF2E7D32)
+                  : const Color(0xFF1565C0),
             ),
           ),
           title: Text(
             topic,
             style: const TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: 15,
             ),
           ),
           subtitle: Padding(
@@ -210,8 +204,8 @@ class _AssignmentListScreenState
             child: Row(
               children: [
                 const Icon(
-                  Icons.calendar_today,
-                  size: 14,
+                  Icons.calendar_today_outlined,
+                  size: 13,
                   color: Colors.grey,
                 ),
                 const SizedBox(width: 6),
@@ -219,6 +213,7 @@ class _AssignmentListScreenState
                   deadline,
                   style: const TextStyle(
                     color: Colors.grey,
+                    fontSize: 13,
                   ),
                 ),
               ],
@@ -226,7 +221,7 @@ class _AssignmentListScreenState
           ),
           trailing: const Icon(
             Icons.arrow_forward_ios_rounded,
-            size: 16,
+            size: 14,
             color: Colors.grey,
           ),
           onTap: () {
@@ -249,23 +244,22 @@ class _AssignmentListScreenState
     );
   }
 
-  /// 🔥 SHIMMER LOADING UI
   Widget _buildShimmer() {
     return ListView.builder(
       itemCount: 5,
       itemBuilder: (_, __) {
         return Shimmer.fromColors(
-          baseColor: Colors.grey.shade300,
+          baseColor: const Color(0xFFEAECEF),
           highlightColor:
-              Colors.grey.shade100,
+              const Color(0xFFF5F6F8),
           child: Container(
             margin:
-                const EdgeInsets.only(bottom: 16),
-            height: 80,
+                const EdgeInsets.only(bottom: 14),
+            height: 70,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius:
-                  BorderRadius.circular(18),
+                  BorderRadius.circular(16),
             ),
           ),
         );

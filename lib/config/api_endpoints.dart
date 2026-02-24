@@ -40,6 +40,8 @@ class ApiEndpoints {
   /// Generate assignment (LLM)
   static const String generateAssignment =
       "$baseUrl/user/generate/assngen";
+  static const String submitAssignment =
+      "$baseUrl/user/upload/uploadassn";
 
   /// Faculty → Get assignments
   static const String getFacultyAssignments =

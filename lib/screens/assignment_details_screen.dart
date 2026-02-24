@@ -32,6 +32,9 @@ class _AssignmentDetailsScreenState
   List<dynamic> students = [];
   String? assignmentFileUrl;
 
+  // ✅ FILTER VARIABLE
+  String selectedFilter = "All";
+
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -122,6 +125,18 @@ class _AssignmentDetailsScreenState
     int maxScore = dashboard?["max_score"] ?? 0;
     int highestPlag = dashboard?["highest_plagiarism"] ?? 0;
 
+    // ✅ FILTERED STUDENTS LIST
+    List<dynamic> filteredStudents = students.where((student) {
+      if (selectedFilter == "All") return true;
+      if (selectedFilter == "Submitted") {
+        return student["status"] == "submitted";
+      }
+      if (selectedFilter == "Not Submitted") {
+        return student["status"] != "submitted";
+      }
+      return true;
+    }).toList();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
       appBar: AppBar(
@@ -143,7 +158,6 @@ class _AssignmentDetailsScreenState
                         CrossAxisAlignment.start,
                     children: [
 
-                      /// ================= HEADER =================
                       Text(
                         assignmentInfo?["topic"] ?? "",
                         style: const TextStyle(
@@ -162,7 +176,6 @@ class _AssignmentDetailsScreenState
 
                       const SizedBox(height: 24),
 
-                      /// ================= PINK BUTTON =================
                       if (assignmentFileUrl != null)
                         SizedBox(
                           width: double.infinity,
@@ -196,7 +209,6 @@ class _AssignmentDetailsScreenState
 
                       const SizedBox(height: 30),
 
-                      /// ================= OVERVIEW =================
                       const Text(
                         "Overview",
                         style: TextStyle(
@@ -236,7 +248,6 @@ class _AssignmentDetailsScreenState
 
                       const SizedBox(height: 30),
 
-                      /// ================= PERFORMANCE TABLE =================
                       const Text(
                         "Performance Insights",
                         style: TextStyle(
@@ -279,12 +290,24 @@ class _AssignmentDetailsScreenState
 
                       const SizedBox(height: 30),
 
-                      /// ================= STUDENTS =================
                       const Text(
                         "Students",
                         style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      /// ✅ FILTER BUTTONS (UI MINIMAL)
+                      Row(
+                        children: [
+                          _filterButton("All"),
+                          const SizedBox(width: 8),
+                          _filterButton("Submitted"),
+                          const SizedBox(width: 8),
+                          _filterButton("Not Submitted"),
+                        ],
                       ),
 
                       const SizedBox(height: 12),
@@ -304,7 +327,7 @@ class _AssignmentDetailsScreenState
                         child: Column(
                           children: [
                             _studentsHeader(),
-                            ...students.map((student) {
+                            ...filteredStudents.map((student) {
                               bool submitted =
                                   student["status"] ==
                                       "submitted";
@@ -320,6 +343,38 @@ class _AssignmentDetailsScreenState
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _filterButton(String label) {
+    final bool isSelected =
+        selectedFilter == label;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedFilter = label;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+            horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFFB8829E)
+              : Colors.grey.withOpacity(0.2),
+          borderRadius:
+              BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color:
+                isSelected ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 
@@ -414,7 +469,7 @@ class _AssignmentDetailsScreenState
   }
 
   Widget _studentRow(
-      String email, bool submitted) {
+      String name, bool submitted) {
     return Padding(
       padding: const EdgeInsets.symmetric(
           horizontal: 18,
@@ -423,7 +478,7 @@ class _AssignmentDetailsScreenState
         mainAxisAlignment:
             MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(child: Text(email)),
+          Expanded(child: Text(name)),
           Container(
             padding:
                 const EdgeInsets.symmetric(

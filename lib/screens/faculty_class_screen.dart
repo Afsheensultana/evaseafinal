@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'create_assignment_screen.dart';
 import 'assignment_list_screen.dart';
+import 'faculty_tools_screen.dart';
 
 class FacultyClassScreen extends StatefulWidget {
   final String className;
@@ -142,7 +143,7 @@ class _FacultyClassScreenState
                             context,
                             MaterialPageRoute(
                               builder: (_) =>
-                                  const CreateAssignmentScreen(),
+                                  CreateAssignmentScreen(classId: widget.classId),
                             ),
                           );
                         },
@@ -179,7 +180,12 @@ class _FacultyClassScreenState
                           ),
                         ),
                         onPressed: () {
-                          // TODO: Start Attendance API
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FacultyToolsScreen(classId: widget.classId),
+                            ),
+                          );
                         },
                       ),
                     ),

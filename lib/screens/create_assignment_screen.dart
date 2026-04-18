@@ -5,7 +5,12 @@ import '../config/api_endpoints.dart';
 import '../utils/app_session.dart';
 
 class CreateAssignmentScreen extends StatefulWidget {
-  const CreateAssignmentScreen({super.key});
+  final String classId;
+
+  const CreateAssignmentScreen({
+    super.key,
+    required this.classId,
+  });
 
   @override
   State<CreateAssignmentScreen> createState() =>
@@ -73,6 +78,8 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen>
           "intermediate": intermediateCtrl.text,
           "advanced": advancedCtrl.text,
           "deadline": selectedDeadline!.toIso8601String(),
+          "class_code": widget.classId,
+          "faculty_mail": AppSession.email,
         }),
       );
 
@@ -83,7 +90,7 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen>
               content:
                   Text("Assignment generated successfully")),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Failed: ${response.body}")),

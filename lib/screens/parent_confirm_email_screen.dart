@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/backend_service.dart';
 import 'login_screen.dart';
 
 class ParentConfirmEmailScreen extends StatefulWidget {
@@ -19,7 +20,9 @@ class ParentConfirmEmailScreen extends StatefulWidget {
 class _ParentConfirmEmailScreenState
     extends State<ParentConfirmEmailScreen> {
   final otpController = TextEditingController();
+  final phoneOtpController = TextEditingController();
   final AuthService authService = AuthService();
+  final BackendService backendService = BackendService();
 
   bool isLoading = false;
 
@@ -34,7 +37,7 @@ class _ParentConfirmEmailScreenState
     setState(() => isLoading = true);
 
     try {
-      final res = await authService.confirmParentEmail(
+      final res = await authService.confirmEmail(
         email: widget.email,
         otp: otp,
       );
@@ -42,6 +45,7 @@ class _ParentConfirmEmailScreenState
       if (!mounted) return;
 
       if (res.statusCode == 200) {
+        await backendService.finalizeSignup(email: widget.email);
         _show("Email verified successfully");
 
         await Future.delayed(const Duration(milliseconds: 600));
@@ -66,6 +70,30 @@ class _ParentConfirmEmailScreenState
     }
   }
 
+  Future<void> confirmPhone() async {
+    final phoneOtp = phoneOtpController.text.trim();
+    if (phoneOtp.isEmpty) {
+      _show("Phone OTP is required");
+      return;
+    }
+
+    setState(() => isLoading = true);
+    try {
+      final res = await backendService.confirmPhone(email: widget.email, otp: phoneOtp);
+      final data = jsonDecode(res.body);
+      final body = data["body"] != null ? jsonDecode(data["body"]) : data;
+      if (res.statusCode == 200 && body["error"] == null) {
+        _show("Phone verified successfully");
+      } else {
+        _show(body["error"]?.toString() ?? "Phone verification failed");
+      }
+    } catch (_) {
+      _show("Phone verification failed. Try again.");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
   void _show(String msg) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(msg)));
@@ -74,6 +102,7 @@ class _ParentConfirmEmailScreenState
   @override
   void dispose() {
     otpController.dispose();
+    phoneOtpController.dispose();
     super.dispose();
   }
 
@@ -153,6 +182,33 @@ class _ParentConfirmEmailScreenState
                   ),
                 ),
 
+                const SizedBox(height: 12),
+
+                TextField(
+                  controller: phoneOtpController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: "Enter Phone OTP (optional)",
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFE8E8EC),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Color(0xFFB8829E),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 24),
 
                 SizedBox(
@@ -192,6 +248,29 @@ class _ParentConfirmEmailScreenState
                               fontSize: 15,
                             ),
                           ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: isLoading ? null : confirmPhone,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFB8829E)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "Confirm Phone",
+                      style: TextStyle(
+                        color: Color(0xFFB8829E),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],

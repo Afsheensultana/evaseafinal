@@ -63,11 +63,12 @@ class _AssignmentDetailsScreenState
 
   Future<void> fetchDetails() async {
     try {
+      final authToken = AppSession.idToken ?? AppSession.token;
       final response = await http.post(
         Uri.parse(ApiEndpoints.getAssignmentDetails),
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer ${AppSession.idToken!}",
+          "Authorization": "Bearer $authToken",
         },
         body: jsonEncode({
           "class_id": widget.classId,
@@ -75,11 +76,24 @@ class _AssignmentDetailsScreenState
         }),
       );
 
+      debugPrint("[AssignmentDetails] status=${response.statusCode}");
+      debugPrint("[AssignmentDetails] body=${response.body}");
+
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        final bodyData = decoded["body"] != null
-            ? jsonDecode(decoded["body"])
-            : decoded;
+
+        // Handle both wrapped {"body": ...} and unwrapped formats.
+        final Map<String, dynamic> bodyData;
+        if (decoded is Map<String, dynamic> && decoded.containsKey("body")) {
+          final rawBody = decoded["body"];
+          bodyData = rawBody is String
+              ? Map<String, dynamic>.from(jsonDecode(rawBody))
+              : Map<String, dynamic>.from(rawBody);
+        } else if (decoded is Map<String, dynamic>) {
+          bodyData = decoded;
+        } else {
+          throw FormatException("Unexpected response format");
+        }
 
         String? extractedUrl;
 
@@ -101,6 +115,7 @@ class _AssignmentDetailsScreenState
         setState(() => isLoading = false);
       }
     } catch (e) {
+      debugPrint("[AssignmentDetails] ERROR: $e");
       setState(() => isLoading = false);
     }
   }

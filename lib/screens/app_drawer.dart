@@ -1,9 +1,30 @@
 import 'package:flutter/material.dart';
 import '../screens/login_screen.dart';
+import '../services/backend_service.dart';
 import '../utils/app_session.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
+
+  Future<void> _logout(BuildContext context) async {
+    try {
+      final email = AppSession.email;
+      if (email != null && email.isNotEmpty) {
+        await BackendService().logout(email: email);
+      }
+    } catch (_) {
+      // Ignore API logout failures and clear local session.
+    }
+
+    AppSession.clear();
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,18 +140,8 @@ class AppDrawer extends StatelessWidget {
                 ),
               ),
               onTap: () {
-
                 Navigator.pop(context);
-
-                AppSession.clear();
-
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const LoginScreen(),
-                  ),
-                  (route) => false,
-                );
+                _logout(context);
               },
             ),
 

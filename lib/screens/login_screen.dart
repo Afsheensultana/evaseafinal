@@ -7,6 +7,8 @@ import 'student_dashboard.dart';
 import 'faculty_dashboard.dart';
 import 'parent_dashboard.dart';
 import 'parent_signup_screen.dart';
+import 'student_signup_screen.dart';
+import 'faculty_signup_screen.dart';
 import '../utils/app_session.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,6 +24,37 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool isPasswordVisible = false;
   bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreSessionAndRoute();
+  }
+
+  Future<void> _restoreSessionAndRoute() async {
+    final restored = await AppSession.restore();
+    if (!restored || !mounted) return;
+
+    Widget target;
+    switch (AppSession.role) {
+      case 'student':
+        target = const StudentDashboard();
+        break;
+      case 'faculty':
+        target = FacultyDashboard(token: AppSession.token ?? '');
+        break;
+      case 'parent':
+        target = const ParentDashboard();
+        break;
+      default:
+        return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => target),
+    );
+  }
 
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -93,6 +126,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
       final String? role =
           decodedToken['role'] ?? decodedToken['custom:role'];
+
+        AppSession.role = role;
+        AppSession.email = (decodedToken['email'] ?? decodedToken['cognito:username'])?.toString();
+        AppSession.name = (decodedToken['name'] ?? decodedToken['custom:name'])?.toString();
+        AppSession.id = (decodedToken['sub'] ?? AppSession.email)?.toString();
+        await AppSession.persist();
 
       if (role == null) {
         _showMessage("Role not found");
@@ -297,6 +336,55 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color: Color(0xFFB8829E)),
                             ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(color: Color(0xFFE8E8EC)),
+                      const SizedBox(height: 12),
+                      const Text(
+                        "Don't have an account?",
+                        style: TextStyle(
+                          color: Color(0xFF5A6078),
+                          fontSize: 13,
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const StudentSignupScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Student",
+                              style: TextStyle(
+                                  color: Color(0xFF4A90E2), fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const Text("|", style: TextStyle(color: Color(0xFFE8E8EC))),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const FacultySignupScreen(),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Faculty",
+                              style: TextStyle(
+                                  color: Color(0xFF50E3C2), fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const Text("|", style: TextStyle(color: Color(0xFFE8E8EC))),
                           TextButton(
                             onPressed: () {
                               Navigator.push(
@@ -308,9 +396,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               );
                             },
                             child: const Text(
-                              "Are you a parent?",
+                              "Parent",
                               style: TextStyle(
-                                  color: Color(0xFFB8829E)),
+                                  color: Color(0xFFB8829E), fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],

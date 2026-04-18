@@ -3,6 +3,7 @@ import 'package:evaseafinal/utils/app_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import '../config/api_endpoints.dart';
 
 class CreateClassScreen extends StatefulWidget {
   final String token;
@@ -153,12 +154,9 @@ class _CreateClassScreenState extends State<CreateClassScreen>
 
     setState(() => isLoading = true);
 
-    const String apiUrl =
-        "https://c9n9q8bz5h.execute-api.ap-south-1.amazonaws.com/dev/user/create_class/create_class";
-
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse(ApiEndpoints.createClass),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer ${AppSession.idToken!}",
@@ -181,7 +179,7 @@ class _CreateClassScreenState extends State<CreateClassScreen>
       if (outerData["statusCode"] == 200) {
         if (!mounted) return;
 
-        final String joinLink = innerData["join_link"] ?? "";
+        final String joinLink = innerData["join_link"] ?? innerData["class_link"] ?? "";
 
         // 🔥 SHORT DISPLAY VERSION (UI Only)
         String shortLink = joinLink.length > 60

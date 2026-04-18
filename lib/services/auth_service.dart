@@ -28,18 +28,70 @@ class AuthService {
     );
   }
 
-  // ---------- ✅ PARENT CONFIRM EMAIL ----------
-  Future<http.Response> confirmParentEmail({
+  // ---------- STUDENT SIGNUP ----------
+  Future<http.Response> studentSignup(Map<String, dynamic> data) async {
+    return await http.post(
+      Uri.parse(ApiEndpoints.studentSignup),
+      headers: const {"Content-Type": "application/json"},
+      body: jsonEncode(data),
+    );
+  }
+
+  // ---------- FACULTY SIGNUP ----------
+  Future<http.Response> facultySignup(Map<String, dynamic> data) async {
+    return await http.post(
+      Uri.parse(ApiEndpoints.facultySignup),
+      headers: const {"Content-Type": "application/json"},
+      body: jsonEncode(data),
+    );
+  }
+
+  // ---------- ✅ CONFIRM EMAIL ----------
+  Future<http.Response> confirmEmail({
     required String email,
     required String otp,
   }) async {
+    // Both Parent, Student, and Faculty use this endpoint
     return await http.post(
-      Uri.parse(ApiEndpoints.parentConfirmEmail),
+      Uri.parse(ApiEndpoints.parentConfirmEmail), // parentConfirmEmail works for all because of common pool!
       headers: const {"Content-Type": "application/json"},
       body: jsonEncode({
         "email": email,
         "otp": otp,
       }),
+    );
+  }
+
+  Future<http.Response> confirmPhone({
+    required String email,
+    required String otp,
+  }) async {
+    return await http.post(
+      Uri.parse(ApiEndpoints.confirmPhone),
+      headers: const {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "email": email,
+        "otp": otp,
+      }),
+    );
+  }
+
+  Future<http.Response> finalizeSignup({required String email}) async {
+    return await http.post(
+      Uri.parse(ApiEndpoints.finalizeSignup),
+      headers: const {"Content-Type": "application/json"},
+      body: jsonEncode({"email": email}),
+    );
+  }
+
+  Future<http.Response> logout({required String email, required String token}) async {
+    return await http.post(
+      Uri.parse(ApiEndpoints.logout),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({"email": email}),
     );
   }
 }

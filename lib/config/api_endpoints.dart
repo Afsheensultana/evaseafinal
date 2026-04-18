@@ -1,6 +1,6 @@
 class ApiEndpoints {
   static const String baseUrl =
-      "https://c9n9q8bz5h.execute-api.ap-south-1.amazonaws.com/dev";
+      "http://127.0.0.1:5000";
 
   // ================= AUTH =================
 
@@ -13,12 +13,26 @@ class ApiEndpoints {
   static const String parentLogin =
       "$baseUrl/user/login/login";
 
+  static const String studentSignup =
+      "$baseUrl/user/signup/signup";
+
+  static const String facultySignup =
+      "$baseUrl/user/signup_faculty/signup_faculty";
+
   static const String parentSignup =
       "$baseUrl/user/signup_parent/signup_parent";
 
   static const String parentConfirmEmail =
       "$baseUrl/user/confirm_email/confirm_email";
 
+  static const String confirmPhone =
+      "$baseUrl/user/confirm_phone/confirm_phone";
+
+  static const String finalizeSignup =
+      "$baseUrl/user/finalize_signup/finalize_signup";
+
+  static const String logout =
+      "$baseUrl/user/logout/logout";
 
   // ================= CLASS =================
 
@@ -41,7 +55,7 @@ class ApiEndpoints {
   static const String generateAssignment =
       "$baseUrl/user/generate/assngen";
   static const String submitAssignment =
-      "$baseUrl/user/upload/uploadassn";
+      "$baseUrl/user/update/uploadassn";
 
   /// Faculty → Get assignments
   static const String getFacultyAssignments =
@@ -54,4 +68,19 @@ class ApiEndpoints {
   /// Assignment details (common)
   static const String getAssignmentDetails =
       "$baseUrl/user/get_assignment_details/get_assignment_details";
+
+  static const String retrieveAssignments =
+      "$baseUrl/user/retrieve/assnretrieve";
+
+  static const String evaluateAssignment =
+      "$baseUrl/user/evaluate/assneval";
+
+  static const String sendAssignmentMail =
+      "$baseUrl/user/send_mail/sendassn";
+
+  static const String viewAssignment =
+      "$baseUrl/user/view/viewassn";
+
+  static const String getBatchMails =
+      "$baseUrl/user/getbatchmails/getbatch_mails";
 }

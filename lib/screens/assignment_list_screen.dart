@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
 import '../../utils/app_session.dart';
+import '../config/api_endpoints.dart';
 import 'assignment_details_screen.dart';
 
 class AssignmentListScreen extends StatefulWidget {
@@ -31,7 +33,7 @@ class _AssignmentListScreenState
   String? error;
 
   final String apiUrl =
-      "https://c9n9q8bz5h.execute-api.ap-south-1.amazonaws.com/dev/user/get_assignment_faculty/get_assignment_faculty";
+      ApiEndpoints.getFacultyAssignments;
 
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -53,23 +55,40 @@ class _AssignmentListScreenState
 
   Future<void> fetchAssignments() async {
     try {
+      final authToken = AppSession.idToken ?? AppSession.token;
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer ${AppSession.idToken}",
+          "Authorization": "Bearer $authToken",
         },
         body: jsonEncode({
           "class_id": widget.classId,
         }),
-      );
+      ).timeout(const Duration(seconds: 25));
+
+      debugPrint("[AssignmentList] status=${response.statusCode}");
+      debugPrint("[AssignmentList] body=${response.body}");
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
 
-        final body = decoded["body"] is String
-            ? jsonDecode(decoded["body"])
-            : decoded["body"];
+        // Flask app.py already unwraps the lambda response,
+        // so decoded is the handler return value directly.
+        // Handle both wrapped {"body": ...} and unwrapped formats.
+        final Map<String, dynamic> body;
+        if (decoded is Map<String, dynamic> && decoded.containsKey("body")) {
+          final rawBody = decoded["body"];
+          body = rawBody is String
+              ? Map<String, dynamic>.from(jsonDecode(rawBody))
+              : Map<String, dynamic>.from(rawBody);
+        } else if (decoded is Map<String, dynamic>) {
+          body = decoded;
+        } else {
+          throw FormatException("Unexpected response format");
+        }
+
+        if (!mounted) return;
 
         setState(() {
           assignments = widget.isOngoing
@@ -78,19 +97,36 @@ class _AssignmentListScreenState
           isLoading = false;
         });
 
-        _controller.forward();
+        if (mounted) {
+          _controller.forward();
+        }
       } else {
+        if (!mounted) return;
         setState(() {
           error = "Server Error: ${response.statusCode}";
           isLoading = false;
         });
       }
+    } on TimeoutException {
+      if (!mounted) return;
+      setState(() {
+        error = "Request timed out. Please try again.";
+        isLoading = false;
+      });
     } catch (e) {
+      debugPrint("[AssignmentList] ERROR: $e");
+      if (!mounted) return;
       setState(() {
         error = "Something went wrong";
         isLoading = false;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../utils/app_session.dart';
 import '../config/api_endpoints.dart';
 
@@ -74,23 +73,31 @@ class _StudentAssignmentFolderScreenState
   // ================= FETCH =================
   Future<void> fetchAssignments() async {
     try {
+      final authToken = AppSession.idToken ?? AppSession.token;
       final response = await http.post(
         Uri.parse(ApiEndpoints.getStudentAssignments),
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer ${AppSession.idToken ?? ""}",
+          "Authorization": "Bearer $authToken",
         },
         body: jsonEncode({
           "class_id": widget.classId,
         }),
       );
 
+      debugPrint("[StudentAssignmentFolder] status=${response.statusCode}");
+
       final decoded = jsonDecode(response.body);
 
       if (response.statusCode != 200) {
-        final errBody = decoded["body"] != null
-            ? jsonDecode(decoded["body"])
-            : {};
+        // Handle error - try both wrapped and unwrapped
+        Map<String, dynamic> errBody = {};
+        if (decoded is Map<String, dynamic> && decoded.containsKey("body")) {
+          final rawBody = decoded["body"];
+          errBody = rawBody is String ? jsonDecode(rawBody) : rawBody ?? {};
+        } else if (decoded is Map<String, dynamic>) {
+          errBody = decoded;
+        }
         setState(() {
           error = errBody["error"] ?? "Server error";
           isLoading = false;
@@ -98,9 +105,18 @@ class _StudentAssignmentFolderScreenState
         return;
       }
 
-      final bodyData = decoded["body"] is String
-          ? jsonDecode(decoded["body"])
-          : decoded["body"];
+      // Handle both wrapped {"body": ...} and unwrapped formats
+      final Map<String, dynamic> bodyData;
+      if (decoded is Map<String, dynamic> && decoded.containsKey("body")) {
+        final rawBody = decoded["body"];
+        bodyData = rawBody is String
+            ? Map<String, dynamic>.from(jsonDecode(rawBody))
+            : Map<String, dynamic>.from(rawBody);
+      } else if (decoded is Map<String, dynamic>) {
+        bodyData = decoded;
+      } else {
+        throw FormatException("Unexpected response format");
+      }
 
       final List<dynamic> list =
           bodyData[widget.type] ?? [];
@@ -116,6 +132,7 @@ class _StudentAssignmentFolderScreenState
       _controller.forward();
 
     } catch (e) {
+      debugPrint("[StudentAssignmentFolder] ERROR: $e");
       setState(() {
         error = "Failed to load assignments";
         isLoading = false;
@@ -171,25 +188,25 @@ class _StudentAssignmentFolderScreenState
 
     setState(() => isUploading = true);
 
-    var request = http.MultipartRequest(
-      'POST',
+    final bytes = await selectedFile!.readAsBytes();
+    final encodedFile = base64Encode(bytes);
+
+    final response = await http.post(
       Uri.parse(ApiEndpoints.submitAssignment),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer ${AppSession.idToken ?? ""}",
+      },
+      body: jsonEncode({
+        "file": encodedFile,
+        "filename": selectedFileName ?? "submission.pdf",
+        "metadata": {
+          "email": AppSession.email ?? "",
+          "class_code": widget.classId,
+          "assignment_name": selectedAssignmentId ?? "",
+        },
+      }),
     );
-
-    request.headers["Authorization"] =
-        "Bearer ${AppSession.idToken ?? ""}";
-
-    request.fields["class_id"] = widget.classId;
-    request.fields["assignment_id"] = selectedAssignmentId ?? "";
-
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        "file",
-        selectedFile!.path,
-      ),
-    );
-
-    var response = await request.send();
 
     setState(() {
       isUploading = false;

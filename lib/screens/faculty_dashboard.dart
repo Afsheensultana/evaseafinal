@@ -7,6 +7,7 @@ import 'faculty_class_screen.dart';
 import 'create_class_screen.dart';
 import '../utils/app_session.dart';
 import '../config/api_endpoints.dart';
+import '../services/backend_service.dart';
 
 class FacultyDashboard extends StatefulWidget {
   final String token;
@@ -24,6 +25,25 @@ class FacultyDashboard extends StatefulWidget {
 class _FacultyDashboardState
     extends State<FacultyDashboard>
     with SingleTickerProviderStateMixin {
+
+  Future<void> _logout() async {
+    try {
+      final email = AppSession.email;
+      if (email != null && email.isNotEmpty) {
+        await BackendService().logout(email: email);
+      }
+    } catch (_) {
+      // Ignore network errors and continue local logout.
+    }
+
+    AppSession.clear();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -182,16 +202,7 @@ class _FacultyDashboardState
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_outlined),
-            onPressed: () {
-              AppSession.token = null;
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(
-                    builder: (_) =>
-                        const LoginScreen()),
-                (route) => false,
-              );
-            },
+            onPressed: _logout,
           )
         ],
       ),

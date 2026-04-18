@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'student_class_details_screen.dart';
 import '../config/api_endpoints.dart';
 import '../utils/app_session.dart';
+import 'app_drawer.dart';
+import 'join_class_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});
@@ -114,8 +116,10 @@ class _StudentDashboardState
             classes.length
         : 0;
 
+
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFB),
+      drawer: const AppDrawer(),
 
       appBar: AppBar(
         title: const Text("Student Dashboard"),
@@ -123,6 +127,23 @@ class _StudentDashboardState
         backgroundColor: const Color(0xFFFAFAFB),
         foregroundColor: const Color(0xFF1A1D2B),
         elevation: 0,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFFB8829E),
+        icon: const Icon(Icons.group_add, color: Colors.white),
+        label: const Text(
+          "Join Class",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        onPressed: () async {
+          final joined = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const JoinClassScreen()),
+          );
+          if (joined == true) {
+            fetchStudentClasses();
+          }
+        },
       ),
 
       body: FadeTransition(

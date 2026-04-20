@@ -96,14 +96,10 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       final Map<String, dynamic> outerJson = jsonDecode(response.body);
-
-      if (!outerJson.containsKey('body')) {
-        _showMessage("Invalid credentials");
-        return;
-      }
-
       final Map<String, dynamic> innerBody =
-          jsonDecode(outerJson['body']);
+          outerJson['body'] is String
+              ? Map<String, dynamic>.from(jsonDecode(outerJson['body']))
+              : Map<String, dynamic>.from(outerJson['body'] ?? outerJson);
 
       final String? accessToken = innerBody['access_token'];
       final String? idToken = innerBody['id_token']; // ✅ ADD THIS

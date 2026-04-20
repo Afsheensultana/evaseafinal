@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../utils/app_session.dart';
 import '../config/api_endpoints.dart';
+import 'student_assignment_details_screen.dart';
 
 class StudentAssignmentFolderScreen extends StatefulWidget {
   final String title;
@@ -129,7 +130,7 @@ class _StudentAssignmentFolderScreenState
     FilePickerResult? result =
         await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'png'],
+      allowedExtensions: ['pdf', 'docx', 'ipynb', 'py'],
     );
 
     if (result == null) return;
@@ -140,10 +141,58 @@ class _StudentAssignmentFolderScreenState
       selectedAssignmentId = assignmentId;
     });
   }
+  Future<void> _evaluateAssignment(String assignmentId) async {
+    try {
+      setState(() => isUploading = true);
+
+      final response = await http.post(
+        Uri.parse(ApiEndpoints.evaluateAssignment),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${AppSession.idToken ?? ""}",
+        },
+        body: jsonEncode({
+          "Records": [
+            {
+              "body": jsonEncode({
+                "assignment_id": assignmentId,
+                "student_email": AppSession.email,
+                "class_id": widget.classId,
+              }),
+            }
+          ],
+        }),
+      );
+
+    setState(() => isUploading = false);
+
+    if (response.statusCode == 200) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Evaluation completed")),
+          );
+
+          setState(() {
+            isLoading = true;
+          });
+
+          await fetchAssignments();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Evaluation failed: ${response.body}")),
+          );
+        }
+
+  } catch (e) {
+    setState(() => isUploading = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Evaluation error: $e")),
+    );
+  }
+}
 
   // ================= CONFIRM + UPLOAD =================
   Future<void> _confirmUpload() async {
-
     if (selectedFile == null) return;
 
     final confirm = await showDialog<bool>(
@@ -152,7 +201,8 @@ class _StudentAssignmentFolderScreenState
         return AlertDialog(
           title: const Text("Confirm Upload"),
           content: const Text(
-              "Please check your file before uploading.\nDo you want to continue?"),
+            "Please check your file before uploading.\nDo you want to continue?",
+          ),
           actions: [
             TextButton(
               child: const Text("Cancel"),
@@ -171,44 +221,54 @@ class _StudentAssignmentFolderScreenState
 
     setState(() => isUploading = true);
 
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse(ApiEndpoints.submitAssignment),
-    );
+    try {
+      final fileBytes = await selectedFile!.readAsBytes();
+      final fileBase64 = base64Encode(fileBytes);
 
-    request.headers["Authorization"] =
-        "Bearer ${AppSession.idToken ?? ""}";
-
-    request.fields["class_id"] = widget.classId;
-    request.fields["assignment_id"] = selectedAssignmentId ?? "";
-
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        "file",
-        selectedFile!.path,
-      ),
-    );
-
-    var response = await request.send();
-
-    setState(() {
-      isUploading = false;
-      selectedFile = null;
-      selectedFileName = null;
-      selectedAssignmentId = null;
-    });
-
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Upload Successful")),
+      final response = await http.post(
+        Uri.parse(ApiEndpoints.submitAssignment),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${AppSession.idToken ?? ""}",
+        },
+        body: jsonEncode({
+          "class_id": widget.classId,
+          "assignment_id": selectedAssignmentId ?? "",
+          "filename": selectedFileName ?? "submission.pdf",
+          "file": fileBase64,
+        }),
       );
-      fetchAssignments();
-    } else {
+
+      setState(() {
+        isUploading = false;
+        selectedFile = null;
+        selectedFileName = null;
+        selectedAssignmentId = null;
+      });
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Upload Successful")),
+        );
+        setState(() {
+          isLoading = true;
+        });
+
+        await fetchAssignments();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Upload Failed: ${response.body}")),
+        );
+      }
+    } catch (e) {
+      setState(() => isUploading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Upload Failed")),
+        SnackBar(content: Text("Upload Error: $e")),
       );
     }
   }
+
 
   // ================= SHIMMER =================
   Widget _buildShimmer() {
@@ -264,10 +324,10 @@ class _StudentAssignmentFolderScreenState
                         final item = assignments[index];
                         final topic = item["topic"] ?? "";
                         final deadline = item["deadline"] ?? "";
-                        final submissionStatus =
-                            item["submission_status"] ?? "not_submitted";
-                        final isSubmitted =
-                            submissionStatus == "submitted";
+                        final submissionStatus = item["submission_status"] ?? "not_submitted";
+                        final isSubmitted = submissionStatus == "submitted" || submissionStatus == "evaluated";
+                        final isEvaluated = submissionStatus == "evaluated";
+
 
                         return Container(
                           margin: const EdgeInsets.only(bottom: 18),
@@ -299,20 +359,28 @@ class _StudentAssignmentFolderScreenState
                                   Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
-                                      color: isSubmitted
-                                          ? const Color(0xFFE6F7EF)
-                                          : const Color(0xFFEAF2FF),
+                                      color: isEvaluated
+                                        ? const Color(0xFFE8F0FE)
+                                        : isSubmitted
+                                            ? const Color(0xFFE6F7EF)
+                                            : const Color(0xFFEAF2FF),
+
                                       borderRadius:
                                           BorderRadius.circular(14),
                                     ),
                                     child: Icon(
-                                      isSubmitted
-                                          ? Icons.check_circle
-                                          : Icons.assignment,
-                                      color: isSubmitted
-                                          ? const Color(0xFF16A34A)
-                                          : const Color(0xFF3B82F6),
+                                      isEvaluated
+                                          ? Icons.verified_rounded
+                                          : isSubmitted
+                                              ? Icons.check_circle
+                                              : Icons.assignment,
+                                      color: isEvaluated
+                                          ? const Color(0xFF1565C0)
+                                          : isSubmitted
+                                              ? const Color(0xFF16A34A)
+                                              : const Color(0xFF3B82F6),
                                     ),
+
                                   ),
 
                                   const SizedBox(width: 16),
@@ -336,29 +404,57 @@ class _StudentAssignmentFolderScreenState
                                                   horizontal: 10,
                                                   vertical: 5),
                                           decoration: BoxDecoration(
-                                            color: isSubmitted
-                                                ? const Color(0xFFE6F7EF)
-                                                : const Color(0xFFFFF4E6),
+                                            color: isEvaluated
+                                              ? const Color(0xFFE8F0FE)
+                                              : isSubmitted
+                                                  ? const Color(0xFFE6F7EF)
+                                                  : const Color(0xFFFFF4E6),
                                             borderRadius:
                                                 BorderRadius.circular(20),
                                           ),
                                           child: Text(
-                                            isSubmitted
-                                                ? "Submitted"
-                                                : "Not Submitted",
+                                            isEvaluated
+                                                ? "Evaluated"
+                                                : isSubmitted
+                                                    ? "Submitted"
+                                                    : "Not Submitted",
                                           ),
+
                                         ),
                                       ],
                                     ),
                                   ),
 
-                                  if (widget.type == "ongoing")
-                                    IconButton(
-                                      icon: const Icon(
-                                          Icons.cloud_upload_rounded),
-                                      onPressed: () =>
-                                          _pickFile(item["assignment_id"]),
-                                    ),
+                                  if (isEvaluated)
+                                        ElevatedButton.icon(
+                                          icon: const Icon(Icons.visibility_rounded, size: 18),
+                                          label: const Text("View"),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) => StudentAssignmentDetailsScreen(
+                                                  classId: widget.classId,
+                                                  assignmentId: item["assignment_id"],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      else if (widget.type == "ongoing" && isSubmitted)
+                                        ElevatedButton.icon(
+                                          icon: const Icon(Icons.psychology_alt_rounded, size: 18),
+                                          label: const Text("Evaluate"),
+                                          onPressed: () => _evaluateAssignment(item["assignment_id"]),
+                                        )
+                                      else if (widget.type == "ongoing")
+                                        IconButton(
+                                          icon: const Icon(Icons.cloud_upload_rounded),
+                                          onPressed: () => _pickFile(item["assignment_id"]),
+                                        ),
+
+
+
                                 ],
                               ),
 

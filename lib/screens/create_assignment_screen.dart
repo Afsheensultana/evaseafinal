@@ -5,12 +5,18 @@ import '../config/api_endpoints.dart';
 import '../utils/app_session.dart';
 
 class CreateAssignmentScreen extends StatefulWidget {
-  const CreateAssignmentScreen({super.key});
+  final String classId;
+
+  const CreateAssignmentScreen({
+    super.key,
+    required this.classId,
+  });
 
   @override
   State<CreateAssignmentScreen> createState() =>
       _CreateAssignmentScreenState();
 }
+
 
 class _CreateAssignmentScreenState extends State<CreateAssignmentScreen>
     with SingleTickerProviderStateMixin {
@@ -68,12 +74,14 @@ class _CreateAssignmentScreenState extends State<CreateAssignmentScreen>
           "Authorization": "Bearer ${AppSession.token}",
         },
         body: jsonEncode({
-          "topic": topicCtrl.text,
-          "beginner": beginnerCtrl.text,
-          "intermediate": intermediateCtrl.text,
-          "advanced": advancedCtrl.text,
+          "topic": topicCtrl.text.trim(),
+          "beginner": beginnerCtrl.text.trim(),
+          "intermediate": intermediateCtrl.text.trim(),
+          "advanced": advancedCtrl.text.trim(),
           "deadline": selectedDeadline!.toIso8601String(),
+          "class_id": widget.classId,
         }),
+
       );
 
       if (response.statusCode == 200 ||

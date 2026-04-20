@@ -22,6 +22,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool isPasswordVisible = false;
   bool isLoading = false;
+  Future<void> saveSession({
+    required String accessToken,
+    required String idToken,
+    required String email,
+    required String role,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("jwt_token", accessToken); 
+    await prefs.setString("access_token", accessToken);
+    await prefs.setString("id_token", idToken);
+    await prefs.setString("email", email);
+    await prefs.setString("role", role);
+  }
 
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -84,20 +97,39 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       // Store access token normally
-      AppSession.token = accessToken;
-      AppSession.idToken = idToken; 
-      await saveToken(accessToken);
-
-      // ✅ Decode ID token for role
+      // Decode ID token for user info
       final decodedToken = _decodeJwt(idToken);
 
       final String? role =
           decodedToken['role'] ?? decodedToken['custom:role'];
 
+      final String? email =
+          decodedToken['email'] ?? emailController.text.trim();
+
       if (role == null) {
         _showMessage("Role not found");
         return;
       }
+
+      if (email == null || email.isEmpty) {
+        _showMessage("Email not found");
+        return;
+      }
+
+      // Store session in memory
+      AppSession.token = accessToken;
+      AppSession.idToken = idToken;
+      AppSession.email = email;
+      AppSession.role = role;
+
+      // Store session locally
+      await saveSession(
+        accessToken: accessToken,
+        idToken: idToken,
+        email: email,
+        role: role,
+      );
+
 
       Widget target;
 

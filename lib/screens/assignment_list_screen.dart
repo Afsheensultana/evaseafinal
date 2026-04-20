@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
 import '../../utils/app_session.dart';
 import 'assignment_details_screen.dart';
+import 'create_assignment_screen.dart';
 
 class AssignmentListScreen extends StatefulWidget {
   final String title;
@@ -104,6 +105,25 @@ class _AssignmentListScreenState
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: "Create Assignment",
+            icon: const Icon(Icons.add_rounded),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CreateAssignmentScreen(
+                    classId: widget.classId,
+                  ),
+                ),
+              );
+
+              fetchAssignments();
+            },
+          ),
+        ],
+
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),

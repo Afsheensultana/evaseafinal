@@ -4,6 +4,7 @@ class AppSession {
   static String? role;
   static String? id;
   static String? idToken;
+  static String? email;
 
   static void clear() {
     token = null;

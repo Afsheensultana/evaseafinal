@@ -42,6 +42,9 @@ class ApiEndpoints {
       "$baseUrl/user/generate/assngen";
   static const String submitAssignment =
       "$baseUrl/user/upload/uploadassn";
+  static const String evaluateAssignment =
+      "$baseUrl/user/evaluate/assneval";
+    
 
   /// Faculty → Get assignments
   static const String getFacultyAssignments =
@@ -50,6 +53,10 @@ class ApiEndpoints {
   /// Student → Get assignments
   static const String getStudentAssignments =
       "$baseUrl/user/get_assignment_student/get_assignment_student";
+
+  static const String getStudentAssignmentDetails =
+        "$baseUrl/user/get_assignment_details_student/get_assignment_details_student";
+
 
   /// Assignment details (common)
   static const String getAssignmentDetails =

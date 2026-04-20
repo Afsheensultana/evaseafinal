@@ -142,7 +142,7 @@ class _FacultyClassScreenState
                             context,
                             MaterialPageRoute(
                               builder: (_) =>
-                                  const CreateAssignmentScreen(),
+                                  CreateAssignmentScreen(classId: widget.classId,),
                             ),
                           );
                         },
